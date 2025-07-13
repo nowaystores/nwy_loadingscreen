@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nwy_loadingscreen</title>
+    <link rel="stylesheet" href="style/main.css">
+    <link rel="stylesheet" href="style/toggle.css">
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="script/config.js"></script>
+    <script src="script/main.js"></script>
+</head>
+<body x-data="Main" x-init="listen">
+    <div class="bg-particles"></div>
+    
+    <!-- YouTube background player -->
+    <div id="youtube-background" class="youtube-background"></div>
+    
+    <!-- Camera Preview Button -->
+    <div class="camera-preview-btn" @click="showImageViewer = true">
+        <img src="img/camera-icon.png" alt="Gallery" />
+    </div>
+
+    <!-- Toggle button to hide/show UI -->
+    <div class="overlay-toggle" id="overlay-toggle" @click="toggleOverlay()">
+        <div class="toggle-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+    
+    <div class="container" x-show="show" x-transition :class="{'hidden': overlayHidden}">
+        <img :src="window.nwyConfig.logoUrl" alt="nwy Logo" class="logo">
+
+        <!-- Hint Box -->
+        <div class="hint-box" x-show="showHint && hintEnabled && !overlayHidden" x-transition>
+            <span x-text="hintMessage"></span>
+        </div>
+
+        <!-- Navigation bar -->
+        <div class="nav-bar">
+            <template x-for="button in buttons">
+                <div class="nav-button" :class="button.selected ? 'selected':''" x-text="button.label" @click="button.selected = selectBtn(button.selected)">Home</div>
+            </template>
+        </div>
+
+        <!-- Home Section -->
+        <div class="home-section" x-show="buttons[0].selected" x-transition:enter.duration.500ms>
+            <div class="welcome-text" x-text="window.nwyConfig.welcomeTitle"></div>
+            <div class="welcome-description" x-text="window.nwyConfig.welcomeDescription"></div>            
+            
+            <!-- Discord Box -->
+            <div class="discord-box">
+                <div class="discord-header">
+                    <img src="img/discord-logo.svg" alt="Discord" class="discord-icon">
+                    <div class="discord-text">Discord:</div>
+                </div>
+                <div class="online-count" x-text="memberCount + ' online'"></div>
+                <a class="connect-button" :href="DiscordInviteLink" target="_blank" @click="window.invokeNative('openUrl', DiscordInviteLink);">CONNECT →</a>
+            </div>
+        </div>
+        
+        <!-- Changelogs Section -->
+        <div class="changelogs-section" x-show="buttons[1].selected" x-transition:enter.duration.500ms>
+            <div class="section-title">CHANGELOGS</div>
+            <div class="changelogs-container">
+                <template x-for="log in changelogs" :key="log.date + log.title">
+                    <div class="changelog-item">
+                        <div class="changelog-date" x-text="log.date"></div>
+                        <div class="changelog-title" x-text="log.title"></div>
+                        <div class="changelog-desc" x-text="log.description"></div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Team Section -->
+        <div class="team-section" x-show="buttons[2].selected" x-transition:enter.duration.500ms>
+            <div class="section-title">TEAM</div>
+            <div class="team-container">
+                <template x-for="member in team">
+                    <div class="team-member">
+                        <img :src="member.img" alt="">
+                        <div class="member-info">
+                            <div class="member-name" x-text="member.discord"></div>
+                            <div class="member-role" x-text="member.role"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+        
+        <!-- Keybinds Section -->
+        <div class="keybinds-section" x-show="buttons[3].selected" x-transition:enter.duration.500ms>
+            <div class="section-title">KEYBINDS</div>
+            
+            <div class="keybinds-container">
+                <!-- Category Tabs -->
+                <div class="category-tabs">
+                    <template x-for="(category, index) in keybindCategories" :key="index">
+                        <div class="category-tab" 
+                             :class="selectedCategory === index ? 'active' : ''" 
+                             x-text="category.name"
+                             @click="selectedCategory = index"></div>
+                    </template>
+                </div>
+                
+                <!-- Keyboard Layout -->
+                <div class="keyboard-layout">
+                    <div class="keyboard-row function-row">
+                        <template x-for="key in ['ESC', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12']">
+                            <div class="key function-key" :class="isKeyHighlighted(key) ? 'highlighted' : ''">
+                                <span class="key-label" x-text="key"></span>
+                                <span class="key-function" x-text="getKeyFunction(key)"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="keyboard-row number-row">
+                        <template x-for="key in ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'BACKSPACE']">
+                            <div class="key" :class="[isKeyHighlighted(key) ? 'highlighted' : '', key === 'BACKSPACE' ? 'wide-key' : '']">
+                                <span class="key-label" x-text="key"></span>
+                                <span class="key-function" x-text="getKeyFunction(key)"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="keyboard-row qwerty-row">
+                        <div class="key tab-key" :class="isKeyHighlighted('TAB') ? 'highlighted' : ''">
+                            <span class="key-label">TAB</span>
+                            <span class="key-function" x-text="getKeyFunction('TAB')"></span>
+                        </div>
+                        <template x-for="key in ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\']">
+                            <div class="key" :class="isKeyHighlighted(key) ? 'highlighted' : ''">
+                                <span class="key-label" x-text="key"></span>
+                                <span class="key-function" x-text="getKeyFunction(key)"></span>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="keyboard-row asdf-row">
+                        <div class="key caps-key" :class="isKeyHighlighted('CAPS') ? 'highlighted' : ''">
+                            <span class="key-label">CAPS</span>
+                            <span class="key-function" x-text="getKeyFunction('CAPS')"></span>
+                        </div>
+                        <template x-for="key in ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'']">
+                            <div class="key" :class="isKeyHighlighted(key) ? 'highlighted' : ''">
+                                <span class="key-label" x-text="key"></span>
+                                <span class="key-function" x-text="getKeyFunction(key)"></span>
+                            </div>
+                        </template>
+                        <div class="key enter-key" :class="isKeyHighlighted('ENTER') ? 'highlighted' : ''">
+                            <span class="key-label">ENTER</span>
+                            <span class="key-function" x-text="getKeyFunction('ENTER')"></span>
+                        </div>
+                    </div>
+                    <div class="keyboard-row zxcv-row">
+                        <div class="key shift-key" :class="isKeyHighlighted('LSHIFT') ? 'highlighted' : ''">
+                            <span class="key-label">SHIFT</span>
+                            <span class="key-function" x-text="getKeyFunction('LSHIFT')"></span>
+                        </div>
+                        <template x-for="key in ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/']">
+                            <div class="key" :class="isKeyHighlighted(key) ? 'highlighted' : ''">
+                                <span class="key-label" x-text="key"></span>
+                                <span class="key-function" x-text="getKeyFunction(key)"></span>
+                            </div>
+                        </template>
+                        <div class="key shift-key" :class="isKeyHighlighted('RSHIFT') ? 'highlighted' : ''">
+                            <span class="key-label">SHIFT</span>
+                            <span class="key-function" x-text="getKeyFunction('RSHIFT')"></span>
+                        </div>
+                    </div>
+                    <div class="keyboard-row spacebar-row">
+                        <div class="key ctrl-key" :class="isKeyHighlighted('LCTRL') ? 'highlighted' : ''">
+                            <span class="key-label">CTRL</span>
+                            <span class="key-function" x-text="getKeyFunction('LCTRL')"></span>
+                        </div>
+                        <div class="key win-key" :class="isKeyHighlighted('LWIN') ? 'highlighted' : ''">
+                            <span class="key-label">WIN</span>
+                            <span class="key-function" x-text="getKeyFunction('LWIN')"></span>
+                        </div>
+                        <div class="key alt-key" :class="isKeyHighlighted('LALT') ? 'highlighted' : ''">
+                            <span class="key-label">ALT</span>
+                            <span class="key-function" x-text="getKeyFunction('LALT')"></span>
+                        </div>
+                        <div class="key spacebar" :class="isKeyHighlighted('SPACE') ? 'highlighted' : ''">
+                            <span class="key-label">SPACE</span>
+                            <span class="key-function" x-text="getKeyFunction('SPACE')"></span>
+                        </div>
+                        <div class="key alt-key" :class="isKeyHighlighted('RALT') ? 'highlighted' : ''">
+                            <span class="key-label">ALT</span>
+                            <span class="key-function" x-text="getKeyFunction('RALT')"></span>
+                        </div>
+                        <div class="key ctrl-key" :class="isKeyHighlighted('RCTRL') ? 'highlighted' : ''">
+                            <span class="key-label">CTRL</span>
+                            <span class="key-function" x-text="getKeyFunction('RCTRL')"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Key descriptions for current category -->
+                <div class="keybind-list">
+                    <template x-for="(bind, index) in keybindCategories[selectedCategory].binds" :key="index">
+                        <div class="keybind-item">
+                            <div class="keybind-key" x-text="bind.key"></div>
+                            <div class="keybind-function" x-text="bind.function"></div>
+                            <div class="keybind-description" x-text="bind.description"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music player -->
+        <div class="music-player" x-show="show" :class="[musicOpen ? 'active':'', overlayHidden ? 'hidden':'']">
+            <img src="img/music.png" alt="" class="music-icon">
+            <div class="music-toggle" @click="musicOpen = !musicOpen">
+                <div class="toggle-bar1"></div>
+                <div class="toggle-bar2" :class="musicOpen ? 'active':''"></div>
+            </div>
+            <div class="music-visualizer">
+                <div class="visualizer-bar" :class="isMusicPlaying ? 'active':''"></div>
+                <div class="visualizer-bar" :class="isMusicPlaying ? 'active2':''"></div>
+                <div class="visualizer-bar" :class="isMusicPlaying ? 'active3':''"></div>
+            </div>
+            <div class="music-info" x-show="musicOpen" x-transition:enter.duration.300ms x-transition:leave.duration.200ms>
+                <div class="music-title" x-text="musicList[currentSong].label"></div>
+                <div class="music-artist" x-text="musicList[currentSong].author"></div>
+                <div class="music-controls">
+                    <img src="img/back.svg" alt="" class="control-back" @click="prev()">
+                    <img src="img/pause.svg" alt="" class="control-pause" x-show="isMusicPlaying" @click="pause()">
+                    <img src="img/play.svg" alt="" class="control-play" x-show="!isMusicPlaying" @click="play()">
+                    <img src="img/forward.svg" alt="" class="control-forward" @click="next()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="loading-indicator" :class="{'hidden': overlayHidden}">
+            <div class="loading-text">Loading game (100%)</div>
+            <div class="loading-bar">
+                <div class="loading-progress" style="width: 100%"></div>
+            </div>
+        </div>
+        
+        <!-- Settings Section -->
+        <div class="settings-section" x-show="buttons[4].selected" x-transition:enter.duration.500ms>
+            <div class="section-title">SETTINGS</div>
+            <div class="settings-container">
+                <div class="setting-group">
+                    <h3>YouTube Background URL:</h3>
+                    <div class="setting-input">
+                        <input type="text" placeholder="Enter a YouTube video ID to set as background" x-model="youtubeVideoIdInput">
+                        <button class="apply-btn" @click="applyYoutubeVideo()">Apply</button>                        
+                    </div>
+                    <p class="setting-help">You can find the ID in the YouTube URL: https://www.youtube.com/watch?v=dQw4w9WgXcQ</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Modal -->
+        <div class="image-viewer" x-show="showImageViewer" @click.self="showImageViewer = false" x-transition>
+            <img :src="previewGallery[galleryIndex].src" :alt="previewGallery[galleryIndex].label" />
+
+            <button class="close-btn" @click="showImageViewer = false">✖</button>
+            <button class="nav-btn left" @click="prevImage()">‹</button>
+            <button class="nav-btn right" @click="nextImage()">›</button>
+        </div>
+    </div>
+
+    <!-- YouTube API script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        let player;
+        function onYouTubeIframeAPIReady() {
+          const videoId = window.nwyConfig.youtubeVideoId || "6N8gVfTFTRs";
+      
+          player = new YT.Player('youtube-background', {
+            videoId: videoId,
+            playerVars: {
+              autoplay: 1,
+              controls: 0,
+              showinfo: 0,
+              modestbranding: 1,
+              loop: 1,
+              fs: 0,
+              cc_load_policy: 0,
+              iv_load_policy: 3,
+              autohide: 1,
+              mute: 1,
+              playlist: videoId
+            },
+            events: {
+              onReady: function (e) {
+                e.target.mute();
+                e.target.playVideo();
+              }
+            }
+          });
+        }
+    </script>
+    
+    <script>
+    setInterval(() => {
+      document.body.style.cursor = 'default';
+      document.querySelectorAll('*').forEach(el => el.style.cursor = 'default');
+    }, 1000);
+    </script>
+
+</body>
+</html>

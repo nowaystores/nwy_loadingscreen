@@ -1,0 +1,2 @@
+A modern, clean, and fully customizable loading screen, built to make a strong first impression.Part of our new Core UI series, crafted with attention to detail and flexibility.Easily edit welcome messages, changelogs, team info, keybinds, music, hints, and more through config.js.
+Includes Discord connect button, video toggle settings, and smooth background music support.Simple to set up, optimized for performance, and ready to enhance your server’s experience.
