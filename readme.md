@@ -21,3 +21,4 @@ Includes Discord connect button, video toggle settings, and smooth background mu
 
 <img width="191" height="96" alt="43dca9c49b04eb219699bf4307b96bd1256daeb0" src="https://github.com/user-attachments/assets/e9dbc9a9-568e-4b17-b985-c7a32fe1883b" />
 <img width="1909" height="984" alt="83df3c85baa9aef19a2e26113ae8d9d3dcb0af09" src="https://github.com/user-attachments/assets/f4f0a6be-9601-4c89-8a86-1802b1dac5c3" />
+https://www.youtube.com/watch?v=Ttz-2dDtruw&t=1s
