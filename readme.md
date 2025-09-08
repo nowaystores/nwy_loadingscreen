@@ -20,7 +20,10 @@ Includes Discord connect button, video toggle settings, and smooth background mu
 8) <img width="367" height="64" alt="64cbddf4be0659b7b2ad56f2d3362e002e825059" src="https://github.com/user-attachments/assets/894b0e45-f4c1-4599-aed9-4c53a691547e" />
 
 <img width="191" height="96" alt="43dca9c49b04eb219699bf4307b96bd1256daeb0" src="https://github.com/user-attachments/assets/e9dbc9a9-568e-4b17-b985-c7a32fe1883b" />
+
 Showcase - [Youtube](https://www.youtube.com/watch?v=Ttz-2dDtruw&t=1s)
+
 Discord - [Connect](https://discord.gg/dTJ9w4Qc)
+
 
 
